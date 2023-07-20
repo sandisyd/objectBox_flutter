@@ -53,38 +53,48 @@ class MainApp extends StatelessWidget {
               ),
               MaterialButton(
                 onPressed: () {
-                  personBox.put(Person(name: i.text));
+                  List<String> strings = i.text.split("-");
+
+                  if (strings.length == 2) {
+                    personBox.put(Person(
+                        nationalIdNumber:
+                            DateTime.now().microsecondsSinceEpoch.toString(),
+                        name: strings[0],
+                        age: int.parse(strings[1])));
+                  }
                 },
                 child: Text("Create"),
               ),
               MaterialButton(
                 onPressed: () {
-                  for (var element in personBox.getAll()) {
-                    log("${element.id} - ${element.name}");
+                  for (var o in personBox.getAll()) {
+                    log('${o.personId} | ${o.nationalIdNumber} | ${o.name} | ${o.age}');
                   }
                 },
                 child: Text("Read"),
               ),
               MaterialButton(
                 onPressed: () {
-                  List<String> s = i.text.split("-");
-                  if (s.length == 2) {
-                    int id = int.tryParse(s[0]) ?? 0;
-                    if (id > 0) {
-                      personBox.put(Person(id: id, name: s[1]));
-                    }
+                  QueryBuilder<Person> builder = personBox
+                      .query(Person_.name
+                          .startsWith("A")
+                          .or(Person_.age.equals(19)))
+                      .order(Person_.name, flags: Order.descending);
+
+                  Query<Person> query = builder.build();
+
+                  log(query.describeParameters());
+                  for (var x in query.find()) {
+                    log('${x.personId} | ${x.nationalIdNumber} | ${x.name} | ${x.age}');
                   }
                 },
-                child: Text("Update"),
+                child: Text("Query"),
               ),
               MaterialButton(
                 onPressed: () {
-                  int id = int.tryParse(i.text) ?? 0;
-                  if (id > 0) {
-                    log("${personBox.remove(id)}");
-                  }
+                  personBox.removeAll();
                 },
-                child: Text("Delete"),
+                child: Text("Delete All"),
               ),
             ],
           )

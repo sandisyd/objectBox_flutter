@@ -20,20 +20,31 @@ export 'package:objectbox/objectbox.dart'; // so that callers only have to impor
 
 final _entities = <ModelEntity>[
   ModelEntity(
-      id: const IdUid(1, 8896156593810742524),
+      id: const IdUid(1, 1952141265370471068),
       name: 'Person',
-      lastPropertyId: const IdUid(2, 4805804474362787462),
+      lastPropertyId: const IdUid(4, 7946664888017325959),
       flags: 0,
       properties: <ModelProperty>[
         ModelProperty(
-            id: const IdUid(1, 2713382202513138357),
-            name: 'id',
+            id: const IdUid(1, 919636229093153005),
+            name: 'personId',
             type: 6,
             flags: 1),
         ModelProperty(
-            id: const IdUid(2, 4805804474362787462),
+            id: const IdUid(2, 1997459929099055638),
+            name: 'nationalIdNumber',
+            type: 9,
+            flags: 2080,
+            indexId: const IdUid(1, 1654674799564031124)),
+        ModelProperty(
+            id: const IdUid(3, 4119143162239936452),
             name: 'name',
             type: 9,
+            flags: 0),
+        ModelProperty(
+            id: const IdUid(4, 7946664888017325959),
+            name: 'age',
+            type: 6,
             flags: 0)
       ],
       relations: <ModelRelation>[],
@@ -60,8 +71,8 @@ Future<Store> openStore(
 ModelDefinition getObjectBoxModel() {
   final model = ModelInfo(
       entities: _entities,
-      lastEntityId: const IdUid(1, 8896156593810742524),
-      lastIndexId: const IdUid(0, 0),
+      lastEntityId: const IdUid(1, 1952141265370471068),
+      lastIndexId: const IdUid(1, 1654674799564031124),
       lastRelationId: const IdUid(0, 0),
       lastSequenceId: const IdUid(0, 0),
       retiredEntityUids: const [],
@@ -77,26 +88,37 @@ ModelDefinition getObjectBoxModel() {
         model: _entities[0],
         toOneRelations: (Person object) => [],
         toManyRelations: (Person object) => {},
-        getId: (Person object) => object.id,
+        getId: (Person object) => object.personId,
         setId: (Person object, int id) {
-          object.id = id;
+          object.personId = id;
         },
         objectToFB: (Person object, fb.Builder fbb) {
-          final nameOffset = fbb.writeString(object.name);
-          fbb.startTable(3);
-          fbb.addInt64(0, object.id);
-          fbb.addOffset(1, nameOffset);
+          final nationalIdNumberOffset = object.nationalIdNumber == null
+              ? null
+              : fbb.writeString(object.nationalIdNumber!);
+          final nameOffset =
+              object.name == null ? null : fbb.writeString(object.name!);
+          fbb.startTable(5);
+          fbb.addInt64(0, object.personId ?? 0);
+          fbb.addOffset(1, nationalIdNumberOffset);
+          fbb.addOffset(2, nameOffset);
+          fbb.addInt64(3, object.age);
           fbb.finish(fbb.endTable());
-          return object.id;
+          return object.personId ?? 0;
         },
         objectFromFB: (Store store, ByteData fbData) {
           final buffer = fb.BufferContext(fbData);
           final rootOffset = buffer.derefObject(0);
 
           final object = Person(
-              id: const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0),
+              personId: const fb.Int64Reader()
+                  .vTableGetNullable(buffer, rootOffset, 4),
+              nationalIdNumber: const fb.StringReader(asciiOptimization: true)
+                  .vTableGetNullable(buffer, rootOffset, 6),
               name: const fb.StringReader(asciiOptimization: true)
-                  .vTableGet(buffer, rootOffset, 6, ''));
+                  .vTableGetNullable(buffer, rootOffset, 8),
+              age: const fb.Int64Reader()
+                  .vTableGetNullable(buffer, rootOffset, 10));
 
           return object;
         })
@@ -107,9 +129,17 @@ ModelDefinition getObjectBoxModel() {
 
 /// [Person] entity fields to define ObjectBox queries.
 class Person_ {
-  /// see [Person.id]
-  static final id = QueryIntegerProperty<Person>(_entities[0].properties[0]);
+  /// see [Person.personId]
+  static final personId =
+      QueryIntegerProperty<Person>(_entities[0].properties[0]);
+
+  /// see [Person.nationalIdNumber]
+  static final nationalIdNumber =
+      QueryStringProperty<Person>(_entities[0].properties[1]);
 
   /// see [Person.name]
-  static final name = QueryStringProperty<Person>(_entities[0].properties[1]);
+  static final name = QueryStringProperty<Person>(_entities[0].properties[2]);
+
+  /// see [Person.age]
+  static final age = QueryIntegerProperty<Person>(_entities[0].properties[3]);
 }

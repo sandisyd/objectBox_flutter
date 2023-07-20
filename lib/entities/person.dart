@@ -2,7 +2,15 @@ import 'package:objectbox/objectbox.dart';
 
 @Entity()
 class Person {
-  int id;
-  final String name;
-  Person({this.id = 0, this.name = "no name"});
+  @Id()
+  int? personId;
+
+  @Unique()
+  final String? nationalIdNumber;
+
+  final String? name;
+
+  final int? age;
+
+  Person({this.personId, this.nationalIdNumber, this.name, this.age});
 }
